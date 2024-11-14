@@ -1,0 +1,26 @@
+{
+  "development": {
+    "username": "postgres",
+    "password": "tiger7W!",
+    "database": "htdocs",
+    "host": "localhost",
+    "port": "5432",
+    "dialect": "postgres"
+  },
+  "test": {
+    "username": "postgres",
+    "password": "tiger7W!",
+    "database": "htdocs_test",
+    "host": "localhost",
+    "port": "5432",
+    "dialect": "postgres"
+  },
+  "production": {
+    "username": "postgres",
+    "password": "tiger7W!",
+    "database": "htdocs_production",
+    "host": "localhost",
+    "port": "5432",
+    "dialect": "postgres"
+  }
+}
