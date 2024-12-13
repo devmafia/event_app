@@ -1,11 +1,12 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { CreateBookingDto } from '../dtos/booking.dto';
-import { Bookings, Events, Seats, BookingSeats, BookingEvents } from '../models/models';
+import { UsersEvents, Bookings, Events, Seats, BookingSeats, BookingEvents } from '../models/models';
 
 @Injectable()
 export class BookingsService {
   constructor(
+    @InjectModel(UsersEvents) private usersEventsModel: typeof UsersEvents,
     @InjectModel(Bookings) private bookingsModel: typeof Bookings,
     @InjectModel(Events) private eventsModel: typeof Events,
     @InjectModel(Seats) private seatsModel: typeof Seats,
@@ -13,30 +14,38 @@ export class BookingsService {
     @InjectModel(BookingEvents) private bookingEventsModel: typeof BookingEvents,
   ) {}
 
-  async getBookings(eventId?: number, userId?: number): Promise<Bookings[]> {
+  async getBookings(userId?: number): Promise<Bookings[]> {
     const where: any = {};
-    if (eventId) where.eventId = eventId;
+    // if (eventId) where.eventId = eventId;
     if (userId) where.userId = userId;
 
-    return this.bookingsModel.findAll({
+    const bookings = await this.bookingsModel.findAll({
       where,
       include: [
-        { model: this.eventsModel, as: 'events', required: true },
-        { model: this.seatsModel, as: 'seats', through: { attributes: [] }, required: false },
+        { model: this.eventsModel, as: 'events', required: true, attributes: ['id', 'title', 'description', 'price', 'image', 'date'] },
+        { model: this.seatsModel, as: 'seats', through: { attributes: [ ] }, required: false },
       ],
     });
+
+    return bookings;
   }
 
   async createBooking(dto: CreateBookingDto): Promise<Bookings> {
     const { userId, guestName, guestEmail, phone, events } = dto;
+    console.log(dto);
+    const userExists = await this.usersEventsModel.findByPk(userId);
+    console.log("", userExists);
+    if (!userExists) {
+        throw new Error(`User with ID ${userId} does not exist.`);
+    }
     const transaction = await this.bookingsModel.sequelize.transaction();
-
+    console.log(typeof userId);
     try {
       const booking = await this.bookingsModel.create(
         { userId, guestName, guestEmail, phone, totalPrice: 0 },
         { transaction },
       );
-
+      console.log("", booking);
       let totalPrice = 0;
 
       for (const event of events) {
@@ -78,7 +87,7 @@ export class BookingsService {
     }
   }
 
-  async deleteBooking(bookingId: number): Promise<void> {
+  async deleteBooking(bookingId: number): Promise<boolean> {
     const transaction = await this.bookingsModel.sequelize.transaction();
 
     try {
@@ -110,6 +119,8 @@ export class BookingsService {
       await this.bookingsModel.destroy({ where: { id: bookingId }, transaction });
 
       await transaction.commit();
+      const success = true;
+      return success;
     } catch (error) {
       await transaction.rollback();
       throw error;

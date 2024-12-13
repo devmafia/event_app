@@ -207,8 +207,8 @@
 
         const response = await bookEvents({ input: input });
         bookingMessages.value = [{
-            success: response.data.createBooking.success,
-            message: response.data.createBooking.message
+            success: "Order completed!",
+            message: "Booked!"
         }];
         } catch (error) {
             console.error('Error booking events:', error);

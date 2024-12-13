@@ -11,24 +11,27 @@ import { ConfigModule } from '@nestjs/config';
 import { UserModule } from "./user/user.module"
 import { EventsModule } from './event/events.module';
 import { BookingModule } from './booking/booking.module';
+import { Dialect } from 'sequelize';
+
 env.config();
 
 @Module({
   imports: [
     ConfigModule.forRoot(),
     SequelizeModule.forRoot({
-      dialect: 'postgres',
-      host: 'localhost',
-      port: 5432,
-      username: `postgres`,
-      password: `tiger7W!`,
-      database: `htdocs`,
+      dialect: process.env.DB_DIALECT as Dialect,
+      host: process.env.DB_HOST,
+      port: parseInt(process.env.DB_PORT) || 5432,
+      username: process.env.DB_USERNAME,
+      password: process.env.DB_PASSWORD,
+      database: process.env.DATABASE,
       autoLoadModels: true,
       synchronize: true,
     }),
     SequelizeModule.forFeature(Object.values(Models)),
     GraphQLModule.forRoot<ApolloDriverConfig>({
       driver: ApolloDriver,
+      context: ({ req }) => ({ req }),
       debug: true,
       autoSchemaFile: './schema.gql',
     }),

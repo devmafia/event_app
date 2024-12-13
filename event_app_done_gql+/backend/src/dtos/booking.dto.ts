@@ -1,5 +1,6 @@
 import { IsEmail, IsNotEmpty, IsArray, IsString, IsNumber } from 'class-validator';
 import { Field, ObjectType, InputType, Int } from '@nestjs/graphql';
+import { Event, Seat } from './models.dtos';
 
 @InputType()
 export class CreateBookingDto {
@@ -66,4 +67,19 @@ export class BookingDto {
 
   @Field()
   totalPrice: number;
+
+  @Field(() => [Event])
+  events: Event[];
+
+  @Field(() => [Seat])
+  seats: Seat[];
 }
+
+@InputType()
+export abstract class DeleteBookingDto {
+
+  @Field()
+  bookingId: number;
+}
+
+

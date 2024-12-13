@@ -1,6 +1,6 @@
 import { EventsResolver } from './events.resolver';
 import { EventsService } from './events.service';
-import { Module, MiddlewareConsumer } from '@nestjs/common';
+import { Module, MiddlewareConsumer, RequestMethod } from '@nestjs/common';
 import { SequelizeModule } from '@nestjs/sequelize';
 import { Events, Seats } from '../models/models';
 import { ConfigModule } from '@nestjs/config';
@@ -16,6 +16,9 @@ import { EventsController } from './events.controller';
 })
 export class EventsModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(FileUploadMiddleware).forRoutes('admin');
+    consumer.apply(FileUploadMiddleware).forRoutes(
+      { path: 'admin', method: RequestMethod.POST },
+      { path: 'admin/:id', method: RequestMethod.PUT }
+    );
   }
 }

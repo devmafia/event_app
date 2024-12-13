@@ -13,7 +13,6 @@ async function bootstrap() {
   });
 
   app.use('/assets', express.static(path.join(__dirname, '..', 'assets')));
-  console.log(path.join(__dirname, 'assets'));
   await app.listen(process.env.PORT ?? 5000);
 }
 bootstrap();

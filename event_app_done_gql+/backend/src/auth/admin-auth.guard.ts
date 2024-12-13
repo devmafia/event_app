@@ -1,15 +1,17 @@
 import { Injectable, CanActivate, ExecutionContext, UnauthorizedException } from '@nestjs/common';
 import * as jwt from 'jsonwebtoken';
 import { ConfigService } from '@nestjs/config';
+import { GqlExecutionContext } from '@nestjs/graphql';
 
 @Injectable()
 export class AdminAuthGuard implements CanActivate {
   constructor(private readonly configService: ConfigService) {}
 
   canActivate(context: ExecutionContext): boolean {
-    const gqlContext = context.switchToHttp().getRequest().headers;
-    const token = this.extractToken(gqlContext);
+    const gqlContext = GqlExecutionContext.create(context);
+    const { req } = gqlContext.getContext();
 
+    const token = this.extractToken(req.headers);
     if (!token) {
       throw new UnauthorizedException('No token provided');
     }
@@ -17,19 +19,20 @@ export class AdminAuthGuard implements CanActivate {
     try {
       const secret = this.configService.get<string>('ADMIN_SECRET_KEY');
       const decoded = jwt.verify(token, secret);
-      context.switchToHttp().getRequest().admin = decoded;
+      req.user = decoded;
       return true;
     } catch (error) {
-      throw new UnauthorizedException('Invalid or expired admin token');
       console.error(error);
+      throw new UnauthorizedException('Invalid or expired token');
     }
   }
 
   private extractToken(headers: any): string | null {
-    const authHeader = headers['authorization'];
-    if (authHeader?.startsWith('Bearer ')) {
+    const authHeader = headers?.authorization || headers?.Authorization;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
       return authHeader.split(' ')[1];
     }
     return null;
   }
 }
+

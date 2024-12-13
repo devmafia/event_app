@@ -17,14 +17,14 @@ export class AuthService {
 
   async register(input: RegisterInput): Promise<AuthResponse> {
     const { username, email, password } = input;
-
+    const role = "user";
     const existingUser = await this.userModel.findOne({ where: { email } });
     if (existingUser) {
       throw new BadRequestException('User already exists');
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    await this.userModel.create({ username, email, password: hashedPassword });
+    await this.userModel.create({ username, email, password: hashedPassword, role });
 
     return { message: "User registered successfully", token: "", userId: null };
   }

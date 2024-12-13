@@ -10,10 +10,11 @@ interface MulterRequest extends Request {
 
 const storage = multer.diskStorage({
   destination: (req, file, callback) => {
-    const uploadPath = resolve(__dirname, '..', 'assets');
+    const uploadPath = resolve(__dirname, '..', '..','assets');
+    console.log(uploadPath);
     if (!fs.existsSync(uploadPath)) {
       fs.mkdirSync(uploadPath, { recursive: true });
-  }
+    }
     callback(null, uploadPath);
   },
   filename: (req, file, callback) => {
@@ -22,18 +23,27 @@ const storage = multer.diskStorage({
   },
 });
 
-const upload = multer({ storage });
+const upload = multer({
+  storage,
+  // Add file filter to debug
+  fileFilter: (req, file, cb) => {
+    console.log('Multer fileFilter - File:', file);
+    cb(null, true);
+  }
+}).single('image');
 
 @Injectable()
 export class FileUploadMiddleware implements NestMiddleware {
   use(req: MulterRequest, res: Response, next: NextFunction) {
-    upload.single('image')(req, res, (err) => {
+    upload(req, res, (err) => {
       if (err) {
         return res.status(500).send({ error: 'File upload failed' });
       }
+
       if (req.file) {
         req.body.image = posix.join('/assets', req.file.filename);
       }
+
       next();
     });
   }

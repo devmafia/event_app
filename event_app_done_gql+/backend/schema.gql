@@ -31,6 +31,7 @@ type UserEvent {
   username: String!
   email: String!
   password: String!
+  role: String!
 }
 
 type Seat {
@@ -38,6 +39,7 @@ type Seat {
   seatNumber: String!
   isBooked: Boolean!
   event: Event!
+  eventId: Float!
 }
 
 type Booking {
@@ -52,7 +54,6 @@ type Booking {
 }
 
 type UserResponse {
-  message: String!
   user: UserEvent
 }
 
@@ -63,14 +64,16 @@ type BookingDto {
   guestEmail: String!
   phone: String!
   totalPrice: Float!
+  events: [Event!]!
+  seats: [Seat!]!
 }
 
 type Query {
   hello: String!
-  getUserdata(userId: Int!): UserEvent!
+  getUserdata(userId: Int!): UserResponse!
   getAllEvents: [Event!]!
   getEvent(id: Int!): Event!
-  getBookings(id: Float, userId: Float): [BookingDto!]!
+  getBookings(userId: Float): [BookingDto!]!
 }
 
 type Mutation {
@@ -78,13 +81,13 @@ type Mutation {
   login(input: LoginInput!): AuthResponse!
   loginAdmin(input: LoginInput!): AuthResponse!
   logout: AuthResponse!
-  updateUsername(userId: Int!, username: String!): UserResponse!
-  updateEmail(userId: Int!, email: String!): UserResponse!
-  updatePassword(userId: Int!, password: String!): UserResponse!
-  deleteUser(userId: Int!): UserResponse!
+  updateUsername(variables: UpdateUsernameInput!): UserResponse!
+  updateEmail(variables: UpdateEmailInput!): UserResponse!
+  updatePassword(variables: UpdatePasswordInput!): Boolean!
+  deleteUser(variables: DeleteUserDto!): Boolean!
   deleteEvent(id: ID!): Boolean!
   createBooking(input: CreateBookingDto!): BookingDto!
-  deleteBooking(id: Float!): Boolean!
+  deleteBooking(variables: DeleteBookingDto!): Boolean!
 }
 
 input RegisterInput {
@@ -99,6 +102,25 @@ input LoginInput {
   password: String!
 }
 
+input UpdateUsernameInput {
+  id: Int!
+  username: String!
+}
+
+input UpdateEmailInput {
+  id: Int!
+  email: String!
+}
+
+input UpdatePasswordInput {
+  id: Int!
+  password: String!
+}
+
+input DeleteUserDto {
+  userId: Float!
+}
+
 input CreateBookingDto {
   userId: Int!
   guestName: String!
@@ -111,4 +133,8 @@ input EventBookingInput {
   eventId: Int!
   seats: [Int!]!
   quantity: Int!
+}
+
+input DeleteBookingDto {
+  bookingId: Float!
 }

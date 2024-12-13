@@ -40,17 +40,31 @@ export class EventsService {
     return event;
   }
 
-  async updateEvent(id, updateEventDto: UpdateEventDto, imagePath?: string): Promise<Event> {
-
+  async updateEvent(
+    id: number,
+    updateEventDto: Partial<UpdateEventDto>,
+    imagePath?: string,
+  ): Promise<Event> {
     const event = await this.getEventById(id);
+
+    if (!event) {
+      throw new NotFoundException(`Event with ID ${id} not found`);
+    }
 
     if (imagePath) {
       event.image = imagePath.replace(/\\/g, '/');
     }
 
-    const eventData = {id, ...updateEventDto, imagePath};
+    const { date, ...otherData } = updateEventDto;
 
-    await event.update(eventData);
+    const updatedEventData = {
+      id: id,
+      ...otherData,
+      date: date || event.date,
+      image: event.image
+    };
+
+    await event.update(updatedEventData);
 
     return event;
   }

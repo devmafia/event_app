@@ -85,7 +85,6 @@
           <p class="text-gray-700"><strong>Email:</strong> {{ booking.guestEmail }}</p>
           <p class="text-gray-700"><strong>Phone:</strong> {{ booking.phone }}</p>
           <p class="text-gray-700"><strong>Total Price:</strong> ${{ booking.totalPrice }}</p>
-          <p class="text-gray-700"><strong>Created At:</strong> {{ new Date(booking.createdAt).toLocaleString() }}</p>
 
           <h5 class="mt-4 text-sm font-medium text-gray-700">Events:</h5>
           <ul>
@@ -95,15 +94,15 @@
               class="event-item flex items-center justify-between p-2 border-b border-gray-200"
             >
               <div class="flex items-center">
-                <img :src="event.image" alt="Event image" class="event-image w-16 h-16 object-cover rounded-md mr-2" />
+                <img :src='"http://localhost:5000"+event.image' alt="Event image" class="event-image w-16 h-16 object-cover rounded-md mr-2" />
                 <div>
                   <strong>{{ event.title }}</strong> ({{ new Date(event.date).toLocaleDateString() }})
-                  <p class="text-gray-600">{{ event.description }}</p>
+                  <p class="text-gray-600"><strong>Description:</strong> {{ event.description }}</p>
                   <p class="text-gray-700"><strong>Price:</strong> ${{ event.price }}</p>
                   <strong>Seats:</strong>
                   <ul>
                     <li
-                      v-for="seat in booking.seats.filter(seat => seat.eventId === event.id)"
+                      v-for="seat in booking.seats"
                       :key="seat.id"
                       class="text-gray-600"
                     >
@@ -138,6 +137,7 @@
 import { ref, onMounted } from 'vue';
 import { useQuery, useMutation } from '@vue/apollo-composable';
 import { FETCH_USER_DATA, FETCH_USER_BOOKINGS, UPDATE_USERNAME, UPDATE_EMAIL, UPDATE_PASSWORD, DELETE_USER, DELETE_BOOKING } from '../graphql/profileQueries';
+import Cookie from "js-cookie";
 
 const username = ref('');
 const email = ref('');
@@ -146,20 +146,95 @@ const confirm_password = ref('');
 const userData = ref({});
 const userBookings = ref([]);
 const messages = ref([]);
+const userId = parseInt(Cookie.get('userId'), 10);
 
-const { onResult: userDataResponse, loading: loadingUserData, error: errorUserData } = useQuery(FETCH_USER_DATA);
-const { onResult: bookingsData, loading: loadingBookings, error: errorBookings } = useQuery(FETCH_USER_BOOKINGS);
+const userToken = localStorage.getItem('jwt');
 
-const { mutate: updateUsername } = useMutation(UPDATE_USERNAME);
-const { mutate: updateEmail } = useMutation(UPDATE_EMAIL);
-const { mutate: updatePassword } = useMutation(UPDATE_PASSWORD);
-const { mutate: deleteUser } = useMutation(DELETE_USER);
-const { mutate: deleteBooking } = useMutation(DELETE_BOOKING);
+const { onResult: userDataResponse, loading: loadingUserData, error: errorUserData } = useQuery(
+      FETCH_USER_DATA,
+      () => ({
+        id: userId
+      }),
+      () => ({
+        context: {
+          headers: {
+            Authorization: userToken
+              ? `Bearer ${userToken}`
+              : undefined
+          }
+        }
+      })
+    );
+const { onResult: bookingsData, loading: loadingBookings, error: errorBookings } = useQuery(FETCH_USER_BOOKINGS,
+      () => ({
+        id: userId
+      }),
+      () => ({
+        context: {
+          headers: {
+            Authorization: userToken
+              ? `Bearer ${userToken}`
+              : undefined
+          }
+        }
+      })
+);
+
+const { mutate: updateUsername } = useMutation(UPDATE_USERNAME,
+      () => ({
+        context: {
+        headers: {
+          Authorization: userToken
+            ? `Bearer ${userToken}`
+            : undefined
+        }
+      }})
+);
+const { mutate: updateEmail } = useMutation(UPDATE_EMAIL,
+() => ({
+        context: {
+        headers: {
+          Authorization: userToken
+            ? `Bearer ${userToken}`
+            : undefined
+        }
+      }})
+);
+const { mutate: updatePassword } = useMutation(UPDATE_PASSWORD,
+() => ({
+        context: {
+        headers: {
+          Authorization: userToken
+            ? `Bearer ${userToken}`
+            : undefined
+        }
+      }})
+);
+const { mutate: deleteUser } = useMutation(DELETE_USER,
+() => ({
+        context: {
+        headers: {
+          Authorization: userToken
+            ? `Bearer ${userToken}`
+            : undefined
+        }
+      }})
+);
+const { mutate: deleteBooking } = useMutation(DELETE_BOOKING,
+() => ({
+        context: {
+        headers: {
+          Authorization: userToken
+            ? `Bearer ${userToken}`
+            : undefined
+        }
+      }})
+);
 
 onMounted(() => {
     userDataResponse((result) => {
-      if (result.data?.user) {
-        userData.value = result.data.user;
+      if (result.data?.getUserdata.user) {
+        userData.value = result.data.getUserdata.user;
       }
     })
 
@@ -174,19 +249,15 @@ const handleEditUsername = async () => {
   const userToken = localStorage.getItem('jwt');
 
   try {
-      const { data } = await updateUsername({
-        variables: {
-        id: userData.value.id,
-        username: username.value,
-      },
-      context: {
-        headers: {
-          Authorization: `Bearer ${userToken}`,
-        },
-      },
-
-    });
-      userData.value.username = data.updateUsername.username;
+    const { data } = await updateUsername({
+      variables: {
+        id: parseInt(userData.value.id),
+        username: username.value
+    }
+  });
+  if (data?.updateUsername?.user) {
+      userData.value = { ...userData.value, username: data.updateUsername.user.username };
+    }
   } catch (error) {
       console.error('Update username error:', error);
   }
@@ -195,14 +266,15 @@ const handleEditUsername = async () => {
 const handleEditEmail = async () => {
   const userToken = localStorage.getItem('jwt');
   try {
-      const { data } = await updateEmail({variables: { id: userData.value.id, email: email.value },
-      context: {
-        headers: {
-          Authorization: `Bearer ${userToken}`,
-        },
-      },
+      const { data } = await updateEmail({
+        variables: {
+          id: parseInt(userData.value.id),
+          email: email.value
+        }
   });
-      userData.value.email = data.updateEmail.email;
+  if (data?.updateEmail?.user) {
+      userData.value = { ...userData.value, email: data.updateEmail.user.email };
+    }
   } catch (error) {
       console.error('Update email error:', error);
   }
@@ -216,12 +288,7 @@ const handleEditPassword = async () => {
   }
 
   try {
-      const { data } = await updatePassword({ variables: { id: userData.value.id, password: password.value },
-      context: {
-        headers: {
-          Authorization: `Bearer ${userToken}`,
-        },
-      },
+      const { data } = await updatePassword({ variables: { id: parseInt(userData.value.id), password: password.value },
     });
       alert("Password updated successfully");
   } catch (error) {
@@ -232,12 +299,9 @@ const handleEditPassword = async () => {
 const handleDeleteUser = async () => {
   const userToken = localStorage.getItem('jwt');
   try {
-      await deleteUser({variables: { id: userData.value.id },
-      context: {
-        headers: {
-          Authorization: `Bearer ${userToken}`,
-        },
-      },
+      await deleteUser(
+
+      {variables: { userId: parseInt(userData.value.id) }
     });
       router.push('/events');
   } catch (error) {
@@ -248,12 +312,7 @@ const handleDeleteUser = async () => {
 const handleDeleteBooking = async (bookingId) => {
   const userToken = localStorage.getItem('jwt');
   try {
-      await deleteBooking({variables: { id: bookingId },
-      context: {
-        headers: {
-          Authorization: `Bearer ${userToken}`,
-        },
-      },
+      await deleteBooking({variables: { bookingId: parseInt(bookingId) },
     });
       userBookings.value = userBookings.value.filter(b => b.id !== bookingId);
   } catch (error) {

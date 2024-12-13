@@ -47,8 +47,8 @@ export class UserEvent {
   @Field()
   password: string;
 
-  // @Field(() => [Booking], { nullable: true })
-  // bookings?: Booking[];
+  @Field()
+  role: string;
 }
 
 @ObjectType()
@@ -79,6 +79,9 @@ export class Seat {
 
   @Field(() => Event)
   event: Event;
+
+  @Field()
+  eventId: number;
 }
 
 @ObjectType()

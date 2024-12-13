@@ -1,14 +1,14 @@
 import { Resolver, Query, Mutation, Args } from '@nestjs/graphql';
 import { BookingsService } from './booking.service';
-import { CreateBookingDto, BookingDto } from '../dtos/booking.dto';
+import { CreateBookingDto, BookingDto, DeleteBookingDto } from '../dtos/booking.dto';
 
 @Resolver()
 export class BookingsResolver {
   constructor(private readonly bookingsService: BookingsService) {}
 
   @Query(() => [BookingDto])
-  async getBookings(@Args('id', { nullable: true }) eventId?: number, @Args('userId', { nullable: true }) userId?: number) {
-    return this.bookingsService.getBookings(eventId, userId);
+  async getBookings(@Args('userId', { nullable: true }) userId: number) {
+    return this.bookingsService.getBookings(userId);
   }
 
   @Mutation(() => BookingDto)
@@ -17,7 +17,8 @@ export class BookingsResolver {
   }
 
   @Mutation(() => Boolean)
-  async deleteBooking(@Args('id') bookingId: number) {
+  async deleteBooking(@Args('variables') variables: DeleteBookingDto) {
+    const { bookingId } = variables;
     await this.bookingsService.deleteBooking(bookingId);
     return true;
   }

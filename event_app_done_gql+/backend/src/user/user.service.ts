@@ -10,12 +10,12 @@ export class UserService {
     @InjectModel(Bookings) private readonly bookingsModel: typeof Bookings,
   ) {}
 
-  async getUserById(userId: number): Promise<UsersEvents> {
+  async getUserById(userId: number): Promise<UserResponse> {
     const user = await this.userModel.findByPk(userId);
     if (!user) {
       throw new NotFoundException('User not found');
     }
-    return user;
+    return { user };
   }
 
   // async createUser(createUserDto: CreateUserDto): Promise<UserResponse> {
@@ -31,7 +31,7 @@ export class UserService {
     }
     user.username = username;
     await user.save();
-    return { message: 'Username updated successfully', user };
+    return { user };
   }
 
   async updateEmail(userId: number, email: string): Promise<UserResponse> {
@@ -41,27 +41,28 @@ export class UserService {
     }
     user.email = email;
     await user.save();
-    return { message: 'Email updated successfully', user };
+    return { user };
   }
 
-  async updatePassword(userId: number, password: string): Promise<UserResponse> {
+  async updatePassword(userId: number, password: string): Promise<boolean> {
     const user = await this.userModel.findByPk(userId);
     if (!user) {
       throw new NotFoundException('User not found');
     }
     user.password = password;
     await user.save();
-    return { message: 'Password updated successfully', user };
+    return true;
   }
 
-  async deleteUser(userId: number): Promise<UserResponse> {
+  async deleteUser(userId: number): Promise<boolean> {
     try {
       await this.bookingsModel.destroy({ where: { userId } });
       const deletedUser = await this.userModel.destroy({ where: { id: userId } });
       if (!deletedUser) {
         throw new NotFoundException('User not found');
       }
-      return { message: 'User deleted successfully' };
+      const success = true;
+      return success;
     } catch (error) {
       throw new InternalServerErrorException('Error deleting user');
       console.error(error);

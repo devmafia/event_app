@@ -47,7 +47,7 @@
               class="bg-white shadow-md rounded-lg overflow-hidden transition-transform transform hover:scale-105"
           >
               <img
-                  :src="event.image"
+                  :src='"http://localhost:5000"+event.image'
                   :alt="event.title"
                   class="w-full h-48 object-cover"
               />

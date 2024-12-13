@@ -81,7 +81,7 @@
               class="bg-white p-4 rounded-lg shadow-md transition-transform transform hover:scale-105"
           >
               <img
-                  :src="event.image"
+                  :src='"http://localhost:5000"+event.image'
                   :alt="event.title"
                   class="w-full h-48 object-cover rounded-lg mb-4"
               />
@@ -181,7 +181,8 @@ const handleAddEvent = async () => {
             throw new Error('Failed to add event');
         }
         const newEvent = await res.json();
-        eventsData.value.push(newEvent);
+        eventsData.value = [...eventsData.value, newEvent];
+        // eventsData.value.push(newEvent);
         if (newEvent.message) {
             messages.value.push(newEvent.message)
         }
@@ -229,8 +230,13 @@ const handleUpdateEvent = async () => {
             throw new Error('Failed to update event');
         }
         const data = await res.json();
+        console.log(data);
+        console.log(eventsData.value, '        ', currentEvent.value.id)
         const index = eventsData.value.findIndex(event => event.id === currentEvent.value.id);
-        eventsData.value[index] = data.updatedEvent;
+        const updatedEvents = [...eventsData.value];
+        updatedEvents[index] = data;
+        eventsData.value = updatedEvents;
+
         editOpen.value = false;
         if (data.message) {
             messages.value.push(data.message)

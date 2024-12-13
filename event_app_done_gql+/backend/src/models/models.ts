@@ -1,4 +1,5 @@
 import { Table, Column, Model, DataType, ForeignKey, BelongsTo, BelongsToMany, HasMany, Unique } from 'sequelize-typescript';
+import { UserRole } from 'src/types/types';
 
 @Table({ timestamps: true })
 export class Events extends Model<Events> {
@@ -42,6 +43,9 @@ export class UsersEvents extends Model<UsersEvents> {
   @Column({ type: DataType.STRING, allowNull: false })
   password: string;
 
+  @Column({ type: DataType.STRING, allowNull: false, defaultValue: 'user' })
+  role: UserRole;
+
   @HasMany(() => Bookings, { onDelete: 'CASCADE' })
   bookings: Bookings[];
 }
@@ -78,7 +82,10 @@ export class Seats extends Model<Seats> {
 @Table({ timestamps: true })
 export class Bookings extends Model<Bookings> {
   @ForeignKey(() => UsersEvents)
-  @Column({ type: DataType.INTEGER, allowNull: true })
+  @Column({ type: DataType.INTEGER, allowNull: true, references: {
+    model: 'UsersEvents',
+    key: 'id'
+  } })
   userId: number;
 
   @Column({ type: DataType.STRING, allowNull: false })

@@ -14,7 +14,7 @@
         <div class="md:w-2/3 md:pr-4">
           <img
             v-if="event.image"
-            :src="event.image"
+            :src='"http://localhost:5000"+event.image'
             :alt="event.title"
             class="w-full h-64 object-cover rounded-lg mb-4 shadow-md"
           />
@@ -165,7 +165,7 @@ export default {
           price: event.value.price
         });
 
-        store.commit('setSelectedSeats', []);
+        store.commit('setSelectedSeats', selectedSeats.value);
         messages.value.push('Seats successfully added to cart');
       } catch (err) {
         messages.value.push(`Failed to add seats to cart: ${err.message}`);
